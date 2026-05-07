@@ -1,0 +1,61 @@
+{
+  "name": "e2s-tools",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "TypeScript library and CLI for Korg Electribe 2 Sampler file formats",
+  "main": "dist/src/index.js",
+  "types": "dist/src/index.d.ts",
+  "bin": {
+    "e2s": "dist/cli/index.js"
+  },
+  "exports": {
+    ".": {
+      "import": "./dist/src/index.js",
+      "types": "./dist/src/index.d.ts"
+    }
+  },
+  "files": [
+    "dist/"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint src cli test",
+    "check": "npm run build && npm run test",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "electribe",
+    "sampler",
+    "korg",
+    "audio",
+    "e2sSample",
+    "midi",
+    "sysex",
+    "riff",
+    "wav",
+    "pattern"
+  ],
+  "author": "Giacomo Battaglia",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/g-battaglia/e2s-tools.git"
+  },
+  "homepage": "https://github.com/g-battaglia/e2s-tools#readme",
+  "bugs": {
+    "url": "https://github.com/g-battaglia/e2s-tools/issues"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0",
+    "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "commander": "^13.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
