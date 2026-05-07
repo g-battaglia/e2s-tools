@@ -1,6 +1,6 @@
 {
   "name": "e2s-tools",
-  "version": "1.0.0",
+  "version": "1.0.2",
   "type": "module",
   "description": "TypeScript library and CLI for Korg Electribe 2 Sampler file formats",
   "main": "dist/src/index.js",

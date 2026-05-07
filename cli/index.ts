@@ -5,6 +5,7 @@ import { registerSampleCommands } from "./commands/sample.js";
 import { registerSliceCommands } from "./commands/slice.js";
 import { registerBatchCommands } from "./commands/batch.js";
 import { registerPatternCommands } from "./commands/pattern.js";
+import { registerAnalyzeCommands } from "./commands/analyze.js";
 
 const program = new Command();
 program
@@ -17,5 +18,6 @@ registerSampleCommands(program);
 registerSliceCommands(program);
 registerBatchCommands(program);
 registerPatternCommands(program);
+registerAnalyzeCommands(program);
 
 program.parse();

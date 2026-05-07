@@ -1,16 +1,20 @@
 export type OutputFormat = "json" | "table" | "text";
 
-export function render(data: unknown, fmt: OutputFormat = "json", title = ""): string {
+export interface RenderOptions {
+  verbose?: boolean;
+}
+
+export function render(data: unknown, fmt: OutputFormat = "json", title = "", options: RenderOptions = {}): string {
   if (fmt === "json") {
     return JSON.stringify(data, null, 2);
   }
   if (fmt === "table") {
-    return renderTable(data, title);
+    return renderTable(data, title, options);
   }
   return renderText(data);
 }
 
-function renderTable(data: unknown, title: string): string {
+function renderTable(data: unknown, title: string, options: RenderOptions = {}): string {
   if (typeof data !== "object" || data === null) return String(data);
   const d = data as Record<string, unknown>;
 
@@ -18,12 +22,42 @@ function renderTable(data: unknown, title: string): string {
   if (title) lines.push(title);
 
   if ("samples" in d && Array.isArray(d.samples)) {
-    lines.push(`${pad("OSC#", 6)} ${pad("Name", 20)} ${pad("Category", 12)} ${pad("Freq", 8)} Stereo`);
-    lines.push("-".repeat(55));
+    const verbose = options.verbose ?? false;
+    const cols = verbose
+      ? [
+          { hdr: "OSC#", w: 6, key: "osc_number" },
+          { hdr: "Name", w: 20, key: "name" },
+          { hdr: "Category", w: 12, key: "category" },
+          { hdr: "Freq", w: 8, key: "sampling_freq" },
+          { hdr: "Stereo", w: 6, key: "is_stereo", fmt: (v: unknown) => v ? "Y" : "N" },
+          { hdr: "1Shot", w: 5, key: "one_shot", fmt: (v: unknown) => v ? "Y" : "N" },
+          { hdr: "+12dB", w: 5, key: "plus_12db", fmt: (v: unknown) => v ? "Y" : "N" },
+          { hdr: "Tune", w: 5, key: "tune" },
+          { hdr: "Volume", w: 7, key: "play_volume" },
+          { hdr: "Dur(s)", w: 8, key: "duration_seconds" },
+          { hdr: "DataSize", w: 10, key: "data_size" },
+          { hdr: "Start", w: 10, key: "start_point" },
+          { hdr: "LoopStart", w: 10, key: "loop_start_offset" },
+          { hdr: "EndPoint", w: 10, key: "end_point_offset" },
+          { hdr: "Slices", w: 6, key: "num_active_slices" },
+        ]
+      : [
+          { hdr: "OSC#", w: 6, key: "osc_number" },
+          { hdr: "Name", w: 20, key: "name" },
+          { hdr: "Category", w: 12, key: "category" },
+          { hdr: "Freq", w: 8, key: "sampling_freq" },
+          { hdr: "Stereo", w: 6, key: "is_stereo", fmt: (v: unknown) => v ? "Y" : "N" },
+        ];
+    lines.push(cols.map((c) => pad(c.hdr, c.w)).join(" "));
+    lines.push("-".repeat(cols.reduce((a, c) => a + c.w, 0) + cols.length - 1));
     for (const s of d.samples) {
       const sample = s as Record<string, unknown>;
       lines.push(
-        `${pad(String(sample.osc_number ?? ""), 6)} ${pad(String(sample.name ?? ""), 20)} ${pad(String(sample.category ?? ""), 12)} ${pad(String(sample.sampling_freq ?? ""), 8)} ${sample.is_stereo ? "Y" : "N"}`,
+        cols.map((c) => {
+          const val = sample[c.key];
+          const display = c.fmt ? c.fmt(val) : String(val ?? "");
+          return pad(display, c.w);
+        }).join(" "),
       );
     }
   } else if ("parts" in d && Array.isArray(d.parts)) {

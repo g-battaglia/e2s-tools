@@ -47,6 +47,7 @@ export function registerSampleCommands(parent: Command): void {
     .argument("<path>", "Path to .all file")
     .option("-c, --category <cat>", "Filter by category")
     .option("-s, --search <term>", "Filter by name")
+    .option("-v, --verbose", "Show all columns in table output")
     .option("-f, --format <fmt>", "Output format", "json")
     .action((filePath, opts) => {
       const { library } = readLibrary(filePath);
@@ -57,7 +58,7 @@ export function registerSampleCommands(parent: Command): void {
         if (opts.search && !(info.name as string).toLowerCase().includes(opts.search.toLowerCase())) continue;
         samples.push(info);
       }
-      console.log(render({ count: samples.length, samples }, opts.format, path.basename(filePath)));
+      console.log(render({ count: samples.length, samples }, opts.format, path.basename(filePath), { verbose: opts.verbose }));
     });
 
   sample

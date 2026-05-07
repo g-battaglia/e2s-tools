@@ -385,16 +385,19 @@ export function registerPatternCommands(parent: Command): void {
     .description("List all 250 patterns with details")
     .argument("<path>", "Path to .e2sallpat file")
     .option("--parts", "Include per-part detail")
+    .option("-v, --verbose", "Show extra columns (parts OSC summary)")
     .option("-f, --format <fmt>", "Output format", "table")
     .action((filePath, opts) => {
       const bank = readPatternBank(filePath);
       const rows: Record<string, unknown>[] = [];
+      const verbose = opts.verbose ?? false;
 
       for (let index = 0; index < PATTERN_BANK_PATTERN_COUNT; index++) {
         const p = bank.getPattern(index);
         const s = p.summary();
         let activeParts = 0;
         let totalStepsOn = 0;
+        const partOscs: string[] = [];
         for (let pi = 0; pi < 16; pi++) {
           let stepsOn = 0;
           for (let si = 0; si < 64; si++) {
@@ -403,6 +406,12 @@ export function registerPatternCommands(parent: Command): void {
           if (stepsOn > 0) {
             activeParts++;
             totalStepsOn += stepsOn;
+          }
+          if (verbose) {
+            const part = p.getPart(pi);
+            if (part.oscillator > 0) {
+              partOscs.push(`P${pi}:${part.oscillator}`);
+            }
           }
         }
         const row: Record<string, unknown> = {
@@ -423,6 +432,9 @@ export function registerPatternCommands(parent: Command): void {
           active_parts: activeParts,
           total_steps_on: totalStepsOn,
         };
+        if (verbose) {
+          row.parts_osc = partOscs.join(" ");
+        }
         if (opts.parts) {
           row.parts_detail = Array.from({ length: 16 }, (_, i) => p.getPart(i));
         }
@@ -433,8 +445,12 @@ export function registerPatternCommands(parent: Command): void {
         console.log(JSON.stringify(rows, null, 2));
       } else {
         const lines: string[] = [`Pattern Bank: ${path.basename(filePath)}`];
-        const cols = ["#", "Name", "BPM", "Swng", "Bar", "Bt", "Key", "Scale", "Chd", "Lvl", "GArp", "MFX", "A13", "A15", "Prt", "Stp"];
-        const widths = [4, 16, 7, 5, 4, 3, 4, 12, 4, 4, 5, 4, 4, 4, 4, 4];
+        const cols = verbose
+          ? ["#", "Name", "BPM", "Swng", "Bar", "Bt", "Key", "Scale", "Chd", "Lvl", "GArp", "MFX", "A13", "A15", "Prt", "Stp", "Parts OSC"]
+          : ["#", "Name", "BPM", "Swng", "Bar", "Bt", "Key", "Scale", "Chd", "Lvl", "GArp", "MFX", "A13", "A15", "Prt", "Stp"];
+        const widths = verbose
+          ? [4, 16, 7, 5, 4, 3, 4, 12, 4, 4, 5, 4, 4, 4, 4, 4, 50]
+          : [4, 16, 7, 5, 4, 3, 4, 12, 4, 4, 5, 4, 4, 4, 4, 4];
         lines.push(cols.map((c, i) => c.padEnd(widths[i])).join(" "));
         lines.push("-".repeat(widths.reduce((a, b) => a + b, 0) + cols.length));
         for (const r of rows) {
@@ -444,7 +460,10 @@ export function registerPatternCommands(parent: Command): void {
             String(r.chord_set), String(r.level), String(r.gate_arp), String(r.mfx_type),
             String(r.alt_13_14), String(r.alt_15_16), String(r.active_parts), String(r.total_steps_on),
           ];
-          lines.push(vals.map((v, i) => v.padEnd(widths[i])).join(" "));
+          if (verbose) {
+            vals.push(String(r.parts_osc ?? ""));
+          }
+          lines.push(vals.map((v, i) => v.padEnd(widths[i]).substring(0, widths[i])).join(" "));
         }
         console.log(lines.join("\n"));
       }
